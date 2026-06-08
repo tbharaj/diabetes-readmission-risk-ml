@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from ucimlrepo import fetch_ucirepo
@@ -160,7 +162,7 @@ random_forest_model = Pipeline(
                 max_depth=12,
                 random_state=RANDOM_STATE,
                 class_weight="balanced_subsample",
-                n_jobs=-1,
+                n_jobs=1,
             ),
         ),
     ]
@@ -429,3 +431,4 @@ as a clinically deployable model. Its value is in demonstrating health-data prep
 model comparison, evaluation, interpretation and responsible discussion of limitations.
 """
 )
+
