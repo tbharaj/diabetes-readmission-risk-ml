@@ -1,4 +1,6 @@
-# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
+﻿from pathlib import Path
+
+readme = """# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
 
 ## Abstract
 
@@ -248,3 +250,9 @@ Strack, B., DeShazo, J.P., Gennings, C., Olmo, J.L., Ventura, S., Cios, K.J. and
 This repository is licensed under the MIT License.
 
 The licence applies only to the code and project documentation created in this repository. The original dataset is not redistributed here.
+"""
+
+Path("README.md").write_text(readme, encoding="utf-8")
+
+print("Report-style README written successfully.")
+print("Line count:", len(readme.splitlines()))
