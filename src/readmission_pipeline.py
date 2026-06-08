@@ -1,7 +1,4 @@
-# ============================================================
-# Diabetes Readmission Risk ML Project
-# Predicting 30-day hospital readmission risk using interpretable ML
-# ============================================================
+ï»¿# -*- coding: utf-8 -*-
 
 from pathlib import Path
 
@@ -37,12 +34,11 @@ from sklearn.inspection import permutation_importance
 
 RANDOM_STATE = 42
 OUTPUT_DIR = Path("outputs")
+BRIEF_DIR = Path("briefs")
+
 OUTPUT_DIR.mkdir(exist_ok=True)
+BRIEF_DIR.mkdir(exist_ok=True)
 
-
-# ------------------------------------------------------------
-# 1. Load dataset
-# ------------------------------------------------------------
 
 print("Loading UCI Diabetes 130-US Hospitals dataset...")
 
@@ -56,28 +52,14 @@ df = pd.concat([X_raw, y_raw], axis=1)
 print("\nDataset shape:")
 print(df.shape)
 
-print("\nFirst five rows:")
-print(df.head())
-
-
-# ------------------------------------------------------------
-# 2. Inspect target variable
-# ------------------------------------------------------------
-
 print("\nReadmission categories:")
 print(df["readmitted"].value_counts(dropna=False))
 
 
-# ------------------------------------------------------------
-# 3. Create binary target
-# ------------------------------------------------------------
-
+# Create binary target
 df = df.replace("?", np.nan)
 
-# Positive class: readmitted within 30 days
 y = (df["readmitted"] == "<30").astype(int)
-
-# Features
 X = df.drop(columns=["readmitted"])
 
 print("\nTarget counts:")
@@ -87,10 +69,7 @@ print("\nTarget proportions:")
 print(y.value_counts(normalize=True))
 
 
-# ------------------------------------------------------------
-# 4. Drop identifier / weak columns
-# ------------------------------------------------------------
-
+# Drop ID / weak interpretability columns
 drop_cols = [
     "encounter_id",
     "patient_nbr",
@@ -105,10 +84,7 @@ print("\nFeature matrix shape after dropping selected columns:")
 print(X.shape)
 
 
-# ------------------------------------------------------------
-# 5. Train-test split
-# ------------------------------------------------------------
-
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -130,10 +106,7 @@ print("\nTest positive rate:")
 print(round(y_test.mean(), 3))
 
 
-# ------------------------------------------------------------
-# 6. Preprocessing
-# ------------------------------------------------------------
-
+# Preprocessing
 numeric_features = X_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
 categorical_features = X_train.select_dtypes(exclude=["int64", "float64"]).columns.tolist()
 
@@ -162,10 +135,7 @@ preprocessor = ColumnTransformer(
 )
 
 
-# ------------------------------------------------------------
-# 7. Build models
-# ------------------------------------------------------------
-
+# Models
 logistic_model = Pipeline(
     steps=[
         ("preprocess", preprocessor),
@@ -202,10 +172,7 @@ models = {
 }
 
 
-# ------------------------------------------------------------
-# 8. Train and evaluate models
-# ------------------------------------------------------------
-
+# Train and evaluate
 results = []
 
 for name, model in models.items():
@@ -251,10 +218,7 @@ print(results_df)
 results_df.to_csv(OUTPUT_DIR / "model_results.csv", index=False)
 
 
-# ------------------------------------------------------------
-# 9. Select best model by ROC-AUC
-# ------------------------------------------------------------
-
+# Best model
 best_model_name = results_df.iloc[0]["model"]
 best_model = models[best_model_name]
 
@@ -262,42 +226,30 @@ print("\nBest model by ROC-AUC:")
 print(best_model_name)
 
 
-# ------------------------------------------------------------
-# 10. Plot ROC curve
-# ------------------------------------------------------------
-
+# ROC curve
 RocCurveDisplay.from_estimator(best_model, X_test, y_test)
-plt.title(f"ROC Curve — {best_model_name}")
+plt.title(f"ROC Curve - {best_model_name}")
 plt.savefig(OUTPUT_DIR / "roc_curve.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 
-# ------------------------------------------------------------
-# 11. Plot precision-recall curve
-# ------------------------------------------------------------
-
+# Precision-recall curve
 PrecisionRecallDisplay.from_estimator(best_model, X_test, y_test)
-plt.title(f"Precision-Recall Curve — {best_model_name}")
+plt.title(f"Precision-Recall Curve - {best_model_name}")
 plt.savefig(OUTPUT_DIR / "precision_recall_curve.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 
-# ------------------------------------------------------------
-# 12. Confusion matrix
-# ------------------------------------------------------------
-
+# Confusion matrix
 y_pred_best = best_model.predict(X_test)
 
 ConfusionMatrixDisplay.from_predictions(y_test, y_pred_best)
-plt.title(f"Confusion Matrix — {best_model_name}")
+plt.title(f"Confusion Matrix - {best_model_name}")
 plt.savefig(OUTPUT_DIR / "confusion_matrix.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 
-# ------------------------------------------------------------
-# 13. Permutation importance
-# ------------------------------------------------------------
-
+# Permutation importance
 sample_n = min(3000, len(X_test))
 
 X_sample = X_test.sample(sample_n, random_state=RANDOM_STATE)
@@ -328,10 +280,7 @@ print(importance_df.head(15))
 importance_df.to_csv(OUTPUT_DIR / "feature_importance.csv", index=False)
 
 
-# ------------------------------------------------------------
-# 14. Plot feature importance
-# ------------------------------------------------------------
-
+# Feature importance plot
 top_features = importance_df.head(10).sort_values("importance_mean")
 
 plt.figure(figsize=(8, 5))
@@ -342,10 +291,7 @@ plt.savefig(OUTPUT_DIR / "permutation_importance.png", dpi=300, bbox_inches="tig
 plt.close()
 
 
-# ------------------------------------------------------------
-# 15. Save technical summary
-# ------------------------------------------------------------
-
+# Technical summary
 summary_text = f"""
 # Technical Summary
 
@@ -390,7 +336,7 @@ This project is a prototype health-data analysis. Model outputs may help identif
 
 ## Limitations
 
-1. The dataset is historical, covering care from 1999–2008.
+1. The dataset is historical, covering care from 1999-2008.
 2. The data comes from US hospitals and may not generalise to UK/NHS settings.
 3. Observational data can identify associations but cannot prove causality.
 4. Missing values and coding patterns may reflect healthcare-system processes.
@@ -399,14 +345,10 @@ This project is a prototype health-data analysis. Model outputs may help identif
 7. External and prospective validation would be required before clinical use.
 """
 
-Path("briefs").mkdir(exist_ok=True)
-Path("briefs/technical_summary.md").write_text(summary_text, encoding="utf-8")
+(BRIEF_DIR / "technical_summary.md").write_text(summary_text, encoding="utf-8")
 
 
-# ------------------------------------------------------------
-# 16. Save medical affairs translation brief
-# ------------------------------------------------------------
-
+# Medical affairs translation brief
 medical_affairs_text = """
 # Medical Affairs Translation Brief
 
@@ -461,15 +403,11 @@ A medical affairs team could use similar evidence-generation thinking to support
 This project connects biomedical science, machine learning, real-world evidence and healthcare communication. It strengthened my understanding of how health data can be analysed technically, interpreted clinically and translated into stakeholder-facing evidence for healthcare decision-making.
 """
 
-Path("briefs/medical_affairs_translation_brief.md").write_text(
+(BRIEF_DIR / "medical_affairs_translation_brief.md").write_text(
     medical_affairs_text,
     encoding="utf-8",
 )
 
-
-# ------------------------------------------------------------
-# 17. Final printout
-# ------------------------------------------------------------
 
 print("\nProject complete.")
 print("\nSaved outputs:")

@@ -1,9 +1,6 @@
-.venv/
+﻿.venv/
 __pycache__/
 .ipynb_checkpoints/
-outputs/*.csv
-outputs/*.png
 *.pkl
-*.csv
 *.xlsx
 .DS_Store
