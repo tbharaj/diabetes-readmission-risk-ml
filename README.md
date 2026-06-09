@@ -2,232 +2,302 @@
 
 ## Abstract
 
-Hospital readmission is an important healthcare outcome because it can reflect disease burden, care-transition quality, treatment complexity and wider pressure on healthcare systems. This project developed an interpretable machine-learning pipeline to predict 30-day hospital readmission risk in patients with diabetes using routinely collected hospital encounter data.
+This project evaluates the feasibility of predicting 30-day hospital readmission risk in patients with diabetes using routinely collected hospital encounter data. The analysis was designed as a reproducible health-data science study rather than a deployable clinical tool.
 
-The aim was not to create a clinically deployable model. Instead, the project aimed to demonstrate responsible health-data preprocessing, binary classification, model evaluation, class-imbalance awareness, feature interpretation and critical discussion of clinical limitations. Two models were compared: logistic regression and random forest. The Random Forest model achieved the highest ROC-AUC of 0.658, but precision remained low, showing that the model would require substantial validation and refinement before any clinical use.
+The project compares baseline and non-linear machine-learning models using stratified cross-validation, hyperparameter tuning, holdout evaluation, calibration analysis, threshold analysis, subgroup/fairness analysis, error analysis and model interpretability. The best model by holdout PR-AUC was **XGBoost**. Its holdout ROC-AUC was **0.680** and holdout PR-AUC was **0.231**.
+
+The results suggest that routinely collected hospital data contains some signal associated with 30-day readmission risk, but the model is not clinically deployable without external validation, prospective testing, calibration review and fairness assessment.
 
 ## 1. Introduction
 
-Diabetes is a long-term metabolic condition associated with substantial clinical complexity, multimorbidity and healthcare utilisation. Patients with diabetes may experience repeated hospital admissions due to complications, comorbid disease, medication burden or challenges in care transitions after discharge.
+Hospital readmission is an important healthcare outcome because it can reflect disease burden, treatment complexity, care-transition quality and healthcare-system pressure. In patients with diabetes, readmission risk may be influenced by multimorbidity, medication burden, prior healthcare utilisation, acute complications and discharge planning.
 
-Thirty-day readmission is commonly used as a healthcare quality and risk indicator. However, predicting readmission is difficult because it is influenced by clinical, demographic, treatment-related and healthcare-system factors. Machine-learning methods can identify patterns in routinely collected healthcare data, but their outputs must be interpreted cautiously, particularly when models are trained on historical observational datasets.
+Thirty-day readmission prediction is challenging because readmission is not driven by one biological mechanism alone. It is influenced by clinical, demographic, treatment-related and healthcare-system variables. Machine-learning models can identify patterns in historical healthcare data, but their usefulness depends on discrimination, calibration, threshold behaviour, subgroup performance and clinical feasibility.
 
-This project uses the Diabetes 130-US Hospitals for Years 1999-2008 dataset from the UCI Machine Learning Repository (Dua and Graff, 2019). The dataset was introduced in a study examining the relationship between HbA1c measurement and hospital readmission outcomes in patients with diabetes (Strack et al., 2014).
+This project uses the Diabetes 130-US Hospitals for Years 1999-2008 dataset from the UCI Machine Learning Repository (Dua and Graff, 2019). The dataset was originally used in work investigating HbA1c measurement and readmission outcomes in patients with diabetes (Strack et al., 2014).
 
 ## 2. Aim and Research Question
 
 ### Aim
 
-The aim of this project was to build a reproducible and interpretable machine-learning pipeline for predicting 30-day hospital readmission risk in patients with diabetes.
+The aim was to build, validate, calibrate, interpret and stress-test a reproducible machine-learning pipeline for predicting 30-day readmission risk in patients with diabetes.
 
 ### Research question
 
 Can routinely collected hospital encounter data identify patients with diabetes at higher risk of readmission within 30 days?
 
-### Project objectives
+### Objectives
 
 The project objectives were to:
 
 - preprocess real-world hospital encounter data;
-- convert readmission status into a binary classification target;
-- compare a logistic regression baseline model with a random forest model;
-- evaluate models using clinically relevant classification metrics;
-- interpret model behaviour using permutation importance;
-- discuss limitations, bias risk and clinical implementation barriers.
+- define a binary 30-day readmission target;
+- compare logistic regression, random forest and optional XGBoost models;
+- use stratified cross-validation and hyperparameter tuning;
+- evaluate discrimination using ROC-AUC and PR-AUC;
+- evaluate probability calibration using Brier score and calibration curves;
+- assess threshold trade-offs between precision, recall and false positives;
+- assess subgroup performance by available demographic variables;
+- perform error analysis to understand misclassified cases;
+- interpret model behaviour using permutation importance and optional SHAP.
 
 ## 3. Dataset
 
-This project used the Diabetes 130-US Hospitals for Years 1999-2008 dataset from the UCI Machine Learning Repository (Dua and Graff, 2019). The dataset contains hospital encounter records for patients with diabetes across multiple US hospitals.
-
-The raw dataset is not redistributed in this repository. Instead, the data is accessed programmatically using the `ucimlrepo` Python package.
-
-### Dataset summary
+The project used the Diabetes 130-US Hospitals for Years 1999-2008 dataset from the UCI Machine Learning Repository (Dua and Graff, 2019).
 
 | Dataset characteristic | Value |
 |---|---:|
 | Hospital encounters | 101,766 |
 | Original columns | 48 |
-| Features used after preprocessing | 44 |
+| Features after preprocessing | 44 |
 | Prediction target | 30-day readmission |
 | Positive class | Readmitted within 30 days |
 | Positive class proportion | Approximately 11.2% |
 
-### Target variable
-
-The original `readmitted` variable contains three categories:
-
-| Original category | Meaning |
-|---|---|
-| `<30` | Patient readmitted within 30 days |
-| `>30` | Patient readmitted after 30 days |
-| `NO` | Patient not readmitted |
-
-For this project, the target was converted into a binary classification problem:
+The original `readmitted` variable contains three categories: `<30`, `>30` and `NO`. This project converted the task into binary classification:
 
 | Binary class | Meaning |
 |---|---|
-| `1` | Readmitted within 30 days |
-| `0` | Not readmitted within 30 days |
+| 1 | Readmitted within 30 days |
+| 0 | Not readmitted within 30 days |
 
-This created an imbalanced classification task, because only approximately 11.2% of encounters belonged to the positive class.
+This created an imbalanced classification problem, making PR-AUC, precision, recall and threshold analysis especially important.
 
 ## 4. Methods
 
-The analysis was implemented in Python using pandas, NumPy, scikit-learn and Matplotlib. Pandas was used for data handling (McKinney, 2010), NumPy supported numerical operations (Harris et al., 2020), scikit-learn was used for model development and evaluation (Pedregosa et al., 2011), and Matplotlib was used for visualisation (Hunter, 2007).
+The analysis was implemented in Python using pandas, NumPy, scikit-learn, Matplotlib and optional XGBoost/SHAP. Pandas was used for data handling (McKinney, 2010), NumPy for numerical operations (Harris et al., 2020), scikit-learn for modelling and evaluation (Pedregosa et al., 2011), and Matplotlib for visualisation (Hunter, 2007).
 
 ### 4.1 Preprocessing
 
 The preprocessing workflow included:
 
-- loading the dataset using `ucimlrepo`;
-- replacing missing-value markers with appropriate missing values;
-- removing selected identifier, high-missingness or low-interpretability columns;
-- separating numerical and categorical variables;
-- imputing missing values;
-- encoding categorical variables;
-- scaling numerical variables where appropriate;
-- creating a stratified train-test split to preserve class proportions.
+- missing-value replacement;
+- removal of selected identifier, high-missingness or low-interpretability columns;
+- numerical imputation and scaling;
+- categorical imputation and one-hot encoding;
+- stratified train-test splitting;
+- class-imbalance-aware modelling.
 
-### 4.2 Models
+### 4.2 Model development
 
-Two machine-learning models were trained and compared.
+Models were compared using stratified 3-fold cross-validation and hyperparameter tuning. PR-AUC was used as the refit metric because the positive class was rare and clinically important.
 
-| Model | Purpose |
-|---|---|
-| Logistic Regression | Baseline interpretable classification model |
-| Random Forest | Non-linear comparison model able to capture feature interactions |
+### 4.3 Models compared
 
-Logistic regression was included as a baseline because it is widely used, relatively interpretable and suitable for comparison in healthcare prediction tasks. Random forest was included because it can capture non-linear relationships and interactions between variables.
+The project compared the following models:
 
-### 4.3 Evaluation metrics
+- Logistic Regression;
+- Random Forest;
+- XGBoost, if installed successfully.
 
-The models were evaluated using:
+## 5. Cross-Validation and Hyperparameter Tuning
 
-- ROC-AUC;
-- precision;
-- recall;
-- F1 score;
-- confusion matrix;
-- precision-recall curve;
-- permutation importance.
+The table below reports the best cross-validation performance for each model after hyperparameter tuning.
 
-Accuracy was not used as the main metric because the dataset was imbalanced. In this setting, a model could achieve high accuracy by mostly predicting the majority class while failing to identify patients at risk of 30-day readmission.
+| model | best_cv_pr_auc_mean | best_cv_pr_auc_std | best_cv_roc_auc_mean | best_cv_roc_auc_std |
+| --- | --- | --- | --- | --- |
+| XGBoost | 0.215 | 0.004 | 0.670 | 0.002 |
+| Logistic Regression | 0.200 | 0.006 | 0.647 | 0.004 |
+| Random Forest | 0.199 | 0.004 | 0.658 | 0.004 |
 
-## 5. Results
+This strengthens the analysis because the results are not based only on one train-test split. Reporting standard deviation also gives a basic estimate of uncertainty across folds.
 
-### 5.1 Model performance
+## 6. Holdout Test Results
 
-| Model | ROC-AUC | Precision | Recall | F1 score |
-|---|---:|---:|---:|---:|
-| Random Forest | 0.658 | 0.172 | 0.539 | 0.261 |
-| Logistic Regression | 0.648 | 0.169 | 0.558 | 0.259 |
+After tuning, the best model configurations were evaluated on a held-out test set.
 
-The Random Forest model achieved the highest ROC-AUC at 0.658. However, both models showed low precision. This means that many patients predicted as high risk would be false positives. In a clinical context, this matters because false positives could lead to unnecessary follow-up, inefficient resource allocation or alert fatigue.
+| model | holdout_roc_auc | holdout_pr_auc | precision_threshold_0_50 | recall_threshold_0_50 | f1_threshold_0_50 | brier_score_uncalibrated |
+| --- | --- | --- | --- | --- | --- | --- |
+| XGBoost | 0.680 | 0.231 | 0.179 | 0.620 | 0.277 | 0.224 |
+| Random Forest | 0.673 | 0.220 | 0.187 | 0.523 | 0.276 | 0.217 |
+| Logistic Regression | 0.659 | 0.212 | 0.172 | 0.554 | 0.263 | 0.227 |
 
-The Logistic Regression model achieved slightly higher recall than the Random Forest model, but the difference was small. Overall, the results suggest that routinely collected hospital encounter data contains some predictive signal for 30-day readmission risk, but model performance is not strong enough for clinical deployment.
+The best model by holdout PR-AUC was **XGBoost**. However, performance should be interpreted cautiously because even a model with moderate ROC-AUC may be clinically weak if precision, calibration or threshold behaviour are poor.
 
-### 5.2 Figures
+## 7. Calibration Analysis
 
-#### ROC curve
+Calibration assesses whether predicted probabilities correspond to observed outcome rates. This matters clinically because a predicted 30% risk should ideally mean that approximately 30% of similar patients experience readmission.
 
-![ROC curve](outputs/roc_curve.png)
+| probability_type | brier_score | roc_auc | pr_auc |
+| --- | --- | --- | --- |
+| uncalibrated | 0.224 | 0.680 | 0.231 |
+| calibrated_sigmoid | 0.094 | 0.681 | 0.232 |
 
-#### Precision-recall curve
+![Calibration curve](outputs/calibration_curve.png)
 
-![Precision-recall curve](outputs/precision_recall_curve.png)
+A poorly calibrated model may still rank patients reasonably but produce misleading risk estimates. This means calibration must be considered before using any model for clinical risk communication.
 
-#### Confusion matrix
+## 8. Threshold Analysis
 
-![Confusion matrix](outputs/confusion_matrix.png)
+Threshold analysis shows how model behaviour changes when the decision threshold is adjusted.
 
-#### Permutation importance
+| threshold | precision | recall | f1 | specificity | predicted_positive_rate | false_positives | false_negatives |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.050 | 0.119 | 0.962 | 0.212 | 0.107 | 0.900 | 16140 | 86 |
+| 0.075 | 0.145 | 0.837 | 0.247 | 0.380 | 0.644 | 11216 | 371 |
+| 0.100 | 0.165 | 0.708 | 0.268 | 0.551 | 0.478 | 8118 | 664 |
+| 0.125 | 0.192 | 0.543 | 0.284 | 0.713 | 0.316 | 5195 | 1037 |
+| 0.150 | 0.218 | 0.397 | 0.281 | 0.821 | 0.203 | 3234 | 1370 |
+| 0.175 | 0.238 | 0.313 | 0.270 | 0.874 | 0.147 | 2281 | 1560 |
+| 0.200 | 0.269 | 0.244 | 0.256 | 0.917 | 0.101 | 1503 | 1718 |
+| 0.250 | 0.350 | 0.122 | 0.180 | 0.972 | 0.039 | 512 | 1995 |
+| 0.300 | 0.392 | 0.071 | 0.121 | 0.986 | 0.020 | 251 | 2109 |
+| 0.400 | 0.564 | 0.014 | 0.027 | 0.999 | 0.003 | 24 | 2240 |
+| 0.500 | 0.000 | 0.000 | 0.000 | 1.000 | 0.000 | 0 | 2271 |
+
+![Threshold analysis](outputs/threshold_analysis.png)
+
+This is clinically important because different decision thresholds imply different trade-offs. A lower threshold may identify more patients at risk but create many false positives. A higher threshold may reduce unnecessary alerts but miss more patients who are truly at risk.
+
+## 9. Subgroup and Fairness Analysis
+
+The subgroup analysis compared model performance across available demographic groups.
+
+| group_type | group | n | observed_readmission_rate | predicted_positive_rate | roc_auc | precision | recall | f1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gender | Female | 10924 | 0.115 | 0.326 | 0.685 | 0.196 | 0.557 | 0.290 |
+| gender | Male | 9430 | 0.108 | 0.304 | 0.676 | 0.186 | 0.527 | 0.275 |
+| age | [10-20) | 130 | 0.046 | 0.069 | 0.843 | 0.333 | 0.500 | 0.400 |
+| age | [20-30) | 324 | 0.133 | 0.290 | 0.832 | 0.351 | 0.767 | 0.482 |
+| age | [30-40) | 725 | 0.108 | 0.241 | 0.710 | 0.211 | 0.474 | 0.292 |
+| age | [40-50) | 1913 | 0.098 | 0.267 | 0.747 | 0.229 | 0.622 | 0.335 |
+| age | [50-60) | 3457 | 0.087 | 0.242 | 0.703 | 0.182 | 0.505 | 0.267 |
+| age | [60-70) | 4547 | 0.116 | 0.292 | 0.657 | 0.195 | 0.490 | 0.279 |
+| age | [70-80) | 5234 | 0.120 | 0.353 | 0.653 | 0.190 | 0.559 | 0.283 |
+| age | [80-90) | 3414 | 0.124 | 0.410 | 0.649 | 0.174 | 0.575 | 0.268 |
+| age | [90-100) | 576 | 0.128 | 0.394 | 0.609 | 0.167 | 0.514 | 0.252 |
+| age_band | <60 | 6583 | 0.094 | 0.247 | 0.731 | 0.210 | 0.555 | 0.305 |
+| age_band | >=60 | 13771 | 0.120 | 0.349 | 0.653 | 0.186 | 0.539 | 0.276 |
+| race | AfricanAmerican | 3866 | 0.112 | 0.317 | 0.673 | 0.188 | 0.535 | 0.279 |
+| race | Asian | 123 | 0.081 | 0.220 | 0.551 | 0.074 | 0.200 | 0.108 |
+| race | Caucasian | 15223 | 0.113 | 0.322 | 0.681 | 0.194 | 0.552 | 0.287 |
+| race | Hispanic | 404 | 0.124 | 0.280 | 0.771 | 0.248 | 0.560 | 0.344 |
+| race | Other | 276 | 0.072 | 0.261 | 0.701 | 0.125 | 0.450 | 0.196 |
+
+![Fairness recall by group](outputs/fairness_recall_by_group.png)
+
+Unequal model performance across groups would require further investigation before deployment. This analysis should be interpreted as an exploratory fairness screen rather than a full fairness audit.
+
+## 10. Error Analysis
+
+Error analysis summarises the types of cases the model misclassified.
+
+| prediction_group | n | mean_predicted_probability | mean_time_in_hospital | mean_num_lab_procedures | mean_num_procedures | mean_num_medications | mean_number_outpatient | mean_number_emergency | mean_number_inpatient | mean_number_diagnoses | most_common_age | most_common_gender | most_common_race | most_common_insulin | most_common_diabetesMed | most_common_discharge_disposition_id |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| false_negative | 1037 | 0.086 | 4.218 | 43.556 | 1.291 | 15.515 | 0.312 | 0.113 | 0.158 | 7.395 | [70-80) | Female | Caucasian | No | Yes | 1 |
+| false_positive | 5195 | 0.181 | 5.366 | 46.310 | 1.238 | 17.969 | 0.550 | 0.386 | 1.629 | 8.090 | [70-80) | Female | Caucasian | No | Yes | 1 |
+| true_negative | 12888 | 0.077 | 3.951 | 41.596 | 1.414 | 15.082 | 0.279 | 0.080 | 0.134 | 7.100 | [70-80) | Female | Caucasian | No | Yes | 1 |
+| true_positive | 1234 | 0.209 | 5.296 | 45.053 | 1.186 | 18.121 | 0.559 | 0.556 | 2.108 | 8.007 | [70-80) | Female | Caucasian | No | Yes | 1 |
+
+False positives may create unnecessary clinical follow-up or alert fatigue. False negatives may miss patients who could benefit from additional discharge support. This trade-off means model usefulness depends on the clinical decision setting.
+
+## 11. Interpretability
+
+Permutation importance was used to identify features most associated with model performance.
+
+| feature | importance_mean_pr_auc | importance_std_pr_auc |
+| --- | --- | --- |
+| number_inpatient | 0.093 | 0.003 |
+| discharge_disposition_id | 0.021 | 0.003 |
+| diag_1 | 0.014 | 0.001 |
+| number_emergency | 0.007 | 0.002 |
+| insulin | 0.004 | 0.000 |
+| diabetesMed | 0.002 | 0.001 |
+| age | 0.002 | 0.000 |
+| medical_specialty | 0.002 | 0.001 |
+| num_procedures | 0.002 | 0.000 |
+| num_medications | 0.001 | 0.000 |
+| payer_code | 0.001 | 0.001 |
+| metformin | 0.001 | 0.001 |
+| diag_2 | 0.001 | 0.000 |
+| diag_3 | 0.000 | 0.000 |
+| num_lab_procedures | 0.000 | 0.000 |
 
 ![Permutation importance](outputs/permutation_importance.png)
 
-### 5.3 Key model drivers
+SHAP was also used as an additional model-interpretability method.
 
-Permutation importance suggested that the most influential features included:
+![SHAP summary](outputs/shap_summary_bar.png)
 
-| Feature group | Clinical interpretation |
-|---|---|
-| Prior inpatient visits | May reflect previous healthcare utilisation and disease burden |
-| Discharge disposition | May reflect care-transition complexity |
-| Emergency visits | May indicate unstable disease or urgent care needs |
-| Diagnosis codes | May capture comorbidity and clinical complexity |
-| Insulin use | May reflect treatment intensity or disease severity |
-| Age | May relate to frailty, comorbidity and readmission risk |
-| Metformin use | May reflect diabetes treatment profile |
-| Diabetes medication status | May reflect active pharmacological management |
-| Number of lab procedures | May indicate clinical complexity or monitoring burden |
-| Number of diagnoses | May reflect multimorbidity |
+Interpretability results should not be interpreted causally. They identify features that contribute to prediction in this dataset, not variables that necessarily cause readmission.
 
-These features are clinically plausible. However, they should not be interpreted as causal drivers. The model identifies associations in observational data, not proof that changing these variables would directly reduce readmission risk.
+## 12. Core Figures
 
-## 6. Discussion
+### ROC curve
 
-This project demonstrates both the potential and the limitations of machine learning in healthcare prediction tasks. The model identified clinically plausible signals associated with readmission risk, including previous inpatient use, emergency visits, discharge disposition and treatment-related variables. These factors are consistent with the idea that readmission risk is influenced by disease complexity, prior healthcare utilisation and care-transition challenges.
+![ROC curve](outputs/roc_curve.png)
 
-However, the modest ROC-AUC and low precision show that the model is not clinically deployable. In healthcare, a model must be evaluated not only by statistical performance but also by clinical consequences. A low-precision readmission model could incorrectly flag many patients as high risk, increasing workload and potentially reducing clinician trust.
+### Precision-recall curve
 
-The class imbalance is also important. Since only approximately 11.2% of encounters involved readmission within 30 days, the positive class was much smaller than the negative class. This makes precision, recall, F1 score and precision-recall analysis more informative than accuracy alone.
+![Precision-recall curve](outputs/precision_recall_curve.png)
 
-The project also highlights the importance of interpretability. Permutation importance helped identify which features contributed most to model performance. This makes the analysis more transparent than reporting performance metrics alone. However, interpretability methods also have limits. Feature importance can be affected by correlated variables, data coding patterns and historical healthcare processes.
+### Confusion matrix
 
-## 7. Limitations
+![Confusion matrix](outputs/confusion_matrix.png)
 
-Several limitations should be considered.
+## 13. Discussion
 
-First, the dataset is historical and covers hospital encounters from 1999-2008. Clinical practice, diabetes management and hospital discharge processes may have changed since then.
+This project suggests that routinely collected hospital encounter data contains predictive signal for 30-day readmission risk in patients with diabetes. Prior healthcare utilisation, emergency visits, discharge disposition, diagnosis information and treatment-related variables are clinically plausible predictors because they may reflect disease burden, care-transition complexity and multimorbidity.
 
-Second, the dataset comes from US hospitals, meaning the results may not generalise to UK/NHS settings.
+However, the project also shows why healthcare prediction models need more than headline discrimination metrics. A model with moderate ROC-AUC may still be clinically weak if precision is low, probabilities are poorly calibrated or subgroup performance is uneven. In this setting, false positives could create unnecessary clinical workload, while false negatives could miss patients who might benefit from additional follow-up.
 
-Third, the analysis uses observational data. The model can identify associations but cannot prove causality.
+The model should therefore be viewed as an exploratory health-data science pipeline, not a deployable clinical tool.
 
-Fourth, some variables may reflect healthcare-system behaviour rather than patient biology alone. For example, number of lab procedures may reflect clinical severity, hospital policy, documentation practice or care intensity.
+## 14. Limitations
 
-Fifth, the model showed low precision. This limits its usefulness as a clinical decision-support tool.
+Key limitations include:
 
-Sixth, sensitive variables such as age, race and gender require careful fairness assessment before any real-world implementation.
+1. The dataset is historical, covering care from 1999-2008.
+2. The dataset comes from US hospitals and may not generalise to UK/NHS settings.
+3. Observational data can identify associations but cannot prove causality.
+4. Coding patterns may reflect healthcare-system processes rather than patient biology alone.
+5. Model performance is modest.
+6. Calibration and threshold behaviour require careful clinical review.
+7. Subgroup analysis is exploratory and does not replace a full fairness audit.
+8. External validation and prospective validation would be required before clinical use.
 
-Finally, external validation and prospective validation would be required before the model could be considered for clinical use.
+## 15. Conclusion
 
-## 8. Conclusion
+This project built and stress-tested an interpretable machine-learning pipeline for predicting 30-day diabetes readmission risk. The advanced version goes beyond a simple model comparison by incorporating cross-validation, hyperparameter tuning, PR-AUC, calibration, threshold analysis, subgroup analysis, error analysis and interpretability.
 
-This project built a reproducible machine-learning pipeline to predict 30-day hospital readmission risk in patients with diabetes using real-world hospital encounter data. The Random Forest model achieved the best ROC-AUC, but both models had low precision, showing that the analysis is best viewed as an educational and exploratory health-data science project rather than a deployable clinical tool.
+The findings show that routinely collected hospital data contains some predictive signal, but the model is not suitable for clinical deployment without further validation. The main value of the project is as a rigorous, reproducible demonstration of responsible healthcare machine learning.
 
-The project demonstrates key skills relevant to health data science, healthcare analytics and medical affairs: data preprocessing, binary classification, model comparison, evaluation of imbalanced outcomes, interpretation of model drivers and responsible discussion of clinical limitations.
+## 16. Medical Affairs and Health Data Science Relevance
 
-## 9. Medical Affairs and Health Data Science Relevance
+For medical affairs, this project demonstrates how real-world evidence and predictive modelling can be translated into stakeholder-relevant insights around patient pathways, discharge planning, risk communication and implementation barriers.
 
-This project is relevant to medical affairs because it translates a technical machine-learning analysis into clinically meaningful insights. The findings can be framed around patient pathway improvement, discharge planning, clinician education, real-world evidence generation and risk communication.
+For health data science, it demonstrates an end-to-end healthcare prediction workflow: data access, preprocessing, model tuning, validation, calibration, interpretability, subgroup analysis, error analysis and critical reporting.
 
-The project is also relevant to health data science because it demonstrates the full workflow of a healthcare prediction task: dataset access, preprocessing, model training, evaluation, interpretation, reporting and limitation analysis.
-
-## 10. Repository Structure
+## 17. Repository Structure
 
 | File or folder | Description |
 |---|---|
 | `src/readmission_pipeline.py` | Main reproducible Python pipeline |
-| `outputs/model_results.csv` | Model performance results |
+| `outputs/model_results.csv` | Holdout model performance |
+| `outputs/cross_validation_tuning_results.csv` | Cross-validation and tuning results |
+| `outputs/calibration_summary.csv` | Calibration metrics |
+| `outputs/calibration_curve.png` | Calibration curve |
+| `outputs/threshold_analysis.csv` | Threshold comparison table |
+| `outputs/threshold_analysis.png` | Threshold analysis plot |
+| `outputs/fairness_subgroup_analysis.csv` | Subgroup/fairness results |
+| `outputs/error_analysis_summary.csv` | Error analysis summary |
 | `outputs/feature_importance.csv` | Permutation importance results |
-| `outputs/roc_curve.png` | ROC curve |
-| `outputs/precision_recall_curve.png` | Precision-recall curve |
-| `outputs/confusion_matrix.png` | Confusion matrix |
-| `outputs/permutation_importance.png` | Feature importance plot |
-| `briefs/technical_summary.md` | Technical project summary |
-| `briefs/medical_affairs_translation_brief.md` | Medical affairs translation brief |
-| `requirements.txt` | Python package requirements |
+| `outputs/shap_top_features.csv` | Optional SHAP results |
+| `briefs/technical_summary.md` | Technical summary |
+| `briefs/medical_affairs_translation_brief.md` | Medical affairs brief |
 
-## 11. Reproducibility
+## 18. Reproducibility
 
 To run the project locally:
 
-1. Clone the repository.
-2. Create a Python virtual environment.
-3. Install the dependencies listed in `requirements.txt`.
-4. Run `src/readmission_pipeline.py`.
-
-The project fetches the dataset programmatically and saves model results, plots and interpretation outputs into the `outputs` folder.
+```bash
+git clone https://github.com/tbharaj/diabetes-readmission-risk-ml.git
+cd diabetes-readmission-risk-ml
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python src/readmission_pipeline.py
+```
 
 ## References
 
@@ -245,6 +315,4 @@ Strack, B., DeShazo, J.P., Gennings, C., Olmo, J.L., Ventura, S., Cios, K.J. and
 
 ## Licence
 
-This repository is licensed under the MIT License.
-
-The licence applies only to the code and project documentation created in this repository. The original dataset is not redistributed here.
+This repository is licensed under the MIT License. The licence applies only to the code and project documentation created in this repository. The original dataset is not redistributed here.

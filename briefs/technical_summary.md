@@ -1,53 +1,40 @@
-
 # Technical Summary
 
-## Project title
+## Project
 
-Predicting 30-Day Diabetes Readmission Risk Using Interpretable Machine Learning
+Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
 
-## Research question
+## Summary
 
-Can routinely collected hospital encounter data identify patients with diabetes at higher risk of readmission within 30 days?
-
-## Dataset
-
-This project uses the UCI Diabetes 130-US Hospitals dataset. The target variable was converted into a binary outcome:
-
-- 1 = readmitted within 30 days
-- 0 = not readmitted within 30 days
-
-## Methods
-
-The project used a reproducible machine-learning pipeline including:
-
-- Missing-value handling
-- Categorical encoding
-- Stratified train-test split
-- Logistic regression baseline
-- Random forest comparison model
-- ROC-AUC, precision, recall, F1 score and confusion matrix evaluation
-- Permutation importance for interpretation
+This project built, tuned, validated, calibrated and interpreted a healthcare machine-learning pipeline for predicting 30-day readmission risk in patients with diabetes.
 
 ## Best model
 
-Best model by ROC-AUC: Random Forest
+The best model by holdout PR-AUC was **XGBoost**.
 
-## Results
+## Cross-validation and tuning
 
-              model  roc_auc  precision   recall  f1_score
-      Random Forest 0.658310   0.172108 0.538529  0.260851
-Logistic Regression 0.648482   0.168866 0.557904  0.259259
+| model | best_cv_pr_auc_mean | best_cv_pr_auc_std | best_cv_roc_auc_mean | best_cv_roc_auc_std |
+| --- | --- | --- | --- | --- |
+| XGBoost | 0.215 | 0.004 | 0.670 | 0.002 |
+| Logistic Regression | 0.200 | 0.006 | 0.647 | 0.004 |
+| Random Forest | 0.199 | 0.004 | 0.658 | 0.004 |
 
-## Interpretation
+## Holdout results
 
-This project is a prototype health-data analysis. Model outputs may help identify patterns associated with readmission risk, but they should not be interpreted as causal or clinically deployable.
+| model | holdout_roc_auc | holdout_pr_auc | precision_threshold_0_50 | recall_threshold_0_50 | f1_threshold_0_50 |
+| --- | --- | --- | --- | --- | --- |
+| XGBoost | 0.680 | 0.231 | 0.179 | 0.620 | 0.277 |
+| Random Forest | 0.673 | 0.220 | 0.187 | 0.523 | 0.276 |
+| Logistic Regression | 0.659 | 0.212 | 0.172 | 0.554 | 0.263 |
 
-## Limitations
+## Calibration
 
-1. The dataset is historical, covering care from 1999-2008.
-2. The data comes from US hospitals and may not generalise to UK/NHS settings.
-3. Observational data can identify associations but cannot prove causality.
-4. Missing values and coding patterns may reflect healthcare-system processes.
-5. The target is imbalanced, so accuracy alone would be misleading.
-6. Sensitive variables such as age, race and gender require fairness assessment.
-7. External and prospective validation would be required before clinical use.
+| probability_type | brier_score | roc_auc | pr_auc |
+| --- | --- | --- | --- |
+| uncalibrated | 0.224 | 0.680 | 0.231 |
+| calibrated_sigmoid | 0.094 | 0.681 | 0.232 |
+
+## Clinical interpretation
+
+The project shows some predictive signal in routinely collected hospital data, but model performance, calibration, threshold behaviour and subgroup performance would need external and prospective validation before clinical use.
