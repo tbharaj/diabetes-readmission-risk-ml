@@ -1,6 +1,5 @@
 ﻿# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
 
-[![Python CI](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-ci.yml/badge.svg)](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-ci.yml)
 
 ## Abstract
 
@@ -347,4 +346,3 @@ Wolff, R.F., Moons, K.G.M., Riley, R.D., Whiting, P.F., Westwood, M., Collins, G
 ## Licence
 
 This repository is licensed under the MIT License. The licence applies only to the code and project documentation created in this repository. The original dataset is not redistributed here.
-
