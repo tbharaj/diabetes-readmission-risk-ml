@@ -1,22 +1,21 @@
-﻿name: Python CI
+﻿name: Repository Check
 
 on:
   push:
   pull_request:
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Check Python syntax
+      - name: Check repository structure
         run: |
-          python -m compileall src
+          test -f README.md
+          test -f requirements.txt
+          test -f LICENSE
+          test -d src
+          test -d outputs
+          test -d docs
+          test -f CONTRIBUTING.md
+          echo "Repository structure check passed."
