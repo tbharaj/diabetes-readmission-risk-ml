@@ -41,21 +41,6 @@ The project objectives were to:
 - perform error analysis to understand misclassified cases;
 - interpret model behaviour using permutation importance and optional SHAP.
 
-**Top SHAP-ranked features:**
-
-| feature | mean_abs_shap |
-| --- | --- |
-| categorical__diag_1_V58 | 0.6304307 |
-| categorical__medical_specialty_Otolaryngology | 0.33250606 |
-| categorical__diag_1_V55 | 0.3040292 |
-| categorical__diag_3_250.6 | 0.29175624 |
-| categorical__diag_1_443 | 0.25912365 |
-| categorical__medical_specialty_Pediatrics-Endocrinology | 0.2570551 |
-| numeric__number_inpatient | 0.24630302 |
-| categorical__diag_1_250.41 | 0.21866883 |
-| categorical__diag_2_272 | 0.20976852 |
-| categorical__diag_1_386 | 0.19038418 |
-
 
 ## 3. Dataset
 
@@ -208,7 +193,6 @@ Error analysis summarises the types of cases the model misclassified.
 | true_positive | 1234 | 0.209 | 5.296 | 45.053 | 1.186 | 18.121 | 0.559 | 0.556 | 2.108 | 8.007 | [70-80) | Female | Caucasian | No | Yes | 1 |
 
 False positives may create unnecessary clinical follow-up or alert fatigue. False negatives may miss patients who could benefit from additional discharge support. This trade-off means model usefulness depends on the clinical decision setting.
-
 ## 11. Interpretability
 
 Permutation importance was used to identify features most associated with model performance.
@@ -231,9 +215,29 @@ Permutation importance was used to identify features most associated with model 
 | diag_3 | 0.000 | 0.000 |
 | num_lab_procedures | 0.000 | 0.000 |
 
+
+**SHAP feature-importance plot:**
+
+![SHAP feature importance](outputs/shap_summary_plot.png)
+
+
+**Top SHAP-ranked features:**
+
+| feature | mean_abs_shap |
+| --- | --- |
+| categorical__diag_1_V58 | 0.6304307 |
+| categorical__medical_specialty_Otolaryngology | 0.33250606 |
+| categorical__diag_1_V55 | 0.3040292 |
+| categorical__diag_3_250.6 | 0.29175624 |
+| categorical__diag_1_443 | 0.25912365 |
+| categorical__medical_specialty_Pediatrics-Endocrinology | 0.2570551 |
+| numeric__number_inpatient | 0.24630302 |
+| categorical__diag_1_250.41 | 0.21866883 |
+| categorical__diag_2_272 | 0.20976852 |
+| categorical__diag_1_386 | 0.19038418 |
+
 ![Permutation importance](outputs/permutation_importance.png)
 
-SHAP was also used as an additional model-interpretability method.
 
 ![SHAP summary](outputs/shap_summary_bar.png)
 
