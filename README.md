@@ -1,4 +1,6 @@
-# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
+﻿# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
+
+[![Python CI](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-ci.yml/badge.svg)](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-ci.yml)
 
 ## Abstract
 
@@ -264,11 +266,6 @@ This project built and stress-tested an interpretable machine-learning pipeline 
 
 The findings show that routinely collected hospital data contains some predictive signal, but the model is not suitable for clinical deployment without further validation. The main value of the project is as a rigorous, reproducible demonstration of responsible healthcare machine learning.
 
-## 16. Medical Affairs and Health Data Science Relevance
-
-For medical affairs, this project demonstrates how real-world evidence and predictive modelling can be translated into stakeholder-relevant insights around patient pathways, discharge planning, risk communication and implementation barriers.
-
-For health data science, it demonstrates an end-to-end healthcare prediction workflow: data access, preprocessing, model tuning, validation, calibration, interpretability, subgroup analysis, error analysis and critical reporting.
 
 ## 17. Repository Structure
 
@@ -285,10 +282,22 @@ For health data science, it demonstrates an end-to-end healthcare prediction wor
 | `outputs/error_analysis_summary.csv` | Error analysis summary |
 | `outputs/feature_importance.csv` | Permutation importance results |
 | `outputs/shap_top_features.csv` | Optional SHAP results |
-| `briefs/technical_summary.md` | Technical summary |
-| `briefs/medical_affairs_translation_brief.md` | Medical affairs brief |
+| `docs/technical_summary.md` | Technical summary |
+| `docs/medical_affairs_translation_brief.md` | Medical affairs brief |
 
 ## 18. Reproducibility
+### Data access
+
+This project uses the Diabetes 130-US Hospitals for Years 1999-2008 dataset from the UCI Machine Learning Repository.
+
+To reproduce the analysis:
+
+1. Download the dataset from the UCI Machine Learning Repository.
+2. Place the raw dataset file in `data/raw/`.
+3. Run `python src/readmission_pipeline.py`.
+
+The dataset is not redistributed in this repository.
+
 
 To run the project locally:
 
@@ -338,3 +347,4 @@ Wolff, R.F., Moons, K.G.M., Riley, R.D., Whiting, P.F., Westwood, M., Collins, G
 ## Licence
 
 This repository is licensed under the MIT License. The licence applies only to the code and project documentation created in this repository. The original dataset is not redistributed here.
+

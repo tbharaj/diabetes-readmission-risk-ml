@@ -63,6 +63,7 @@ SRC_DIR.mkdir(exist_ok=True)
 
 
 def make_onehot_encoder():
+    """Run the make onehot encoder step in the project workflow."""
     try:
         return OneHotEncoder(handle_unknown="ignore", sparse_output=True)
     except TypeError:
@@ -70,6 +71,7 @@ def make_onehot_encoder():
 
 
 def make_calibrated_classifier(estimator):
+    """Run the make calibrated classifier step in the project workflow."""
     try:
         return CalibratedClassifierCV(estimator=estimator, method="sigmoid", cv=3)
     except TypeError:
@@ -77,6 +79,7 @@ def make_calibrated_classifier(estimator):
 
 
 def df_to_markdown(df, float_digits=3):
+    """Run the df to markdown step in the project workflow."""
     if df.empty:
         return "No results available."
 
@@ -100,6 +103,7 @@ def df_to_markdown(df, float_digits=3):
 
 
 def load_dataset():
+    """Run the load dataset step in the project workflow."""
     print("Fetching Diabetes 130-US Hospitals dataset from UCI...")
     diabetes = fetch_ucirepo(id=296)
 
@@ -125,6 +129,7 @@ def load_dataset():
 
 
 def prepare_features(X):
+    """Run the prepare features step in the project workflow."""
     drop_cols = [
         "encounter_id",
         "patient_nbr",
@@ -146,6 +151,7 @@ def prepare_features(X):
 
 
 def build_preprocessor(numeric_features, categorical_features):
+    """Run the build preprocessor step in the project workflow."""
     numeric_transformer = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
@@ -171,6 +177,7 @@ def build_preprocessor(numeric_features, categorical_features):
 
 
 def build_model_search_spaces(preprocessor, y_train):
+    """Run the build model search spaces step in the project workflow."""
     neg = int((y_train == 0).sum())
     pos = int((y_train == 1).sum())
     scale_pos_weight = neg / pos
@@ -263,6 +270,7 @@ def build_model_search_spaces(preprocessor, y_train):
 
 
 def tune_models(search_spaces, X_train, y_train):
+    """Run the tune models step in the project workflow."""
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
 
     scoring = {
@@ -317,6 +325,7 @@ def tune_models(search_spaces, X_train, y_train):
 
 
 def evaluate_holdout_models(tuned_models, X_test, y_test):
+    """Run the evaluate holdout models step in the project workflow."""
     rows = []
     predictions = {}
 
@@ -352,6 +361,7 @@ def evaluate_holdout_models(tuned_models, X_test, y_test):
 
 
 def calibrate_best_model(best_model, X_train, y_train, X_test, y_test):
+    """Run the calibrate best model step in the project workflow."""
     print("\nCalibrating best model using sigmoid calibration...")
     calibrated_model = make_calibrated_classifier(best_model)
     calibrated_model.fit(X_train, y_train)
@@ -422,6 +432,7 @@ def calibrate_best_model(best_model, X_train, y_train, X_test, y_test):
 
 
 def threshold_analysis(y_test, y_proba):
+    """Run the threshold analysis step in the project workflow."""
     thresholds = [0.05, 0.075, 0.10, 0.125, 0.15, 0.175, 0.20, 0.25, 0.30, 0.40, 0.50]
 
     rows = []
@@ -467,6 +478,7 @@ def threshold_analysis(y_test, y_proba):
 
 
 def save_core_plots(best_model_name, y_test, y_proba, threshold=0.50):
+    """Run the save core plots step in the project workflow."""
     y_pred = (y_proba >= threshold).astype(int)
 
     plt.figure()
@@ -493,6 +505,7 @@ def save_core_plots(best_model_name, y_test, y_proba, threshold=0.50):
 
 
 def safe_auc(y_true, y_proba):
+    """Run the safe auc step in the project workflow."""
     try:
         if len(np.unique(y_true)) < 2:
             return np.nan
@@ -502,6 +515,7 @@ def safe_auc(y_true, y_proba):
 
 
 def run_fairness_analysis(X_test_original, y_test, y_proba, threshold=0.50):
+    """Run the run fairness analysis step in the project workflow."""
     y_pred = (y_proba >= threshold).astype(int)
     rows = []
 
@@ -514,6 +528,7 @@ def run_fairness_analysis(X_test_original, y_test, y_proba, threshold=0.50):
         younger_than_60 = ["[0-10)", "[10-20)", "[20-30)", "[30-40)", "[40-50)", "[50-60)"]
 
         def age_band(value):
+            """Run the age band step in the project workflow."""
             if pd.isna(value):
                 return np.nan
             value = str(value)
@@ -581,6 +596,7 @@ def run_fairness_analysis(X_test_original, y_test, y_proba, threshold=0.50):
 
 
 def run_error_analysis(X_test_original, y_test, y_proba, threshold=0.50):
+    """Run the run error analysis step in the project workflow."""
     y_pred = (y_proba >= threshold).astype(int)
 
     error_df = X_test_original.copy()
@@ -637,6 +653,7 @@ def run_error_analysis(X_test_original, y_test, y_proba, threshold=0.50):
 
 
 def get_feature_names(model):
+    """Run the get feature names step in the project workflow."""
     preprocessor = model.named_steps["preprocessor"]
 
     try:
@@ -646,6 +663,7 @@ def get_feature_names(model):
 
 
 def run_permutation_importance(best_model, X_test, y_test):
+    """Run the run permutation importance step in the project workflow."""
     print("\nRunning permutation importance on a test subset...")
 
     if len(X_test) > 5000:
@@ -692,6 +710,7 @@ def run_permutation_importance(best_model, X_test, y_test):
 
 
 def run_optional_shap(best_model, X_test):
+    """Run the run optional shap step in the project workflow."""
     if not SHAP_AVAILABLE:
         print("\nSHAP not available. Install with: pip install shap")
         return pd.DataFrame()
@@ -1041,6 +1060,7 @@ This repository is licensed under the MIT License. The licence applies only to t
 
 
 def write_briefs(best_model_name, cv_df, results_df, calibration_summary, threshold_df, fairness_df, error_summary):
+    """Run the write briefs step in the project workflow."""
     technical = f"""# Technical Summary
 
 ## Project
@@ -1131,6 +1151,7 @@ This advanced evaluation moves the project beyond a simple model comparison by s
 
 
 def update_requirements():
+    """Run the update requirements step in the project workflow."""
     req_path = Path("requirements.txt")
     existing = req_path.read_text(encoding="utf-8") if req_path.exists() else ""
 
@@ -1155,6 +1176,7 @@ def update_requirements():
 
 
 def main():
+    """Run the main step in the project workflow."""
     update_requirements()
 
     X, y = load_dataset()
