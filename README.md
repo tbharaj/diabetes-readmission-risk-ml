@@ -1,6 +1,4 @@
 # Interpretable Machine Learning for Diabetes Readmission Risk Prediction
-﻿# Interpretable Machine Learning for Diabetes Readmission Risk Prediction
-
 
 ## Abstract
 
