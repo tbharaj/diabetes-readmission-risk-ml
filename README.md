@@ -1,4 +1,4 @@
-[![Tests](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-checks.yml/badge.svg)](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-checks.yml)
+# Interpretable Machine Learning for Diabetes Readmission Risk Prediction
 ﻿# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
 
 
