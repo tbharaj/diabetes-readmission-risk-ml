@@ -1,3 +1,4 @@
+[![Tests](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-checks.yml/badge.svg)](https://github.com/tbharaj/diabetes-readmission-risk-ml/actions/workflows/python-checks.yml)
 ﻿# Diabetes Readmission Risk Prediction Using Interpretable Machine Learning
 
 
@@ -41,6 +42,22 @@ The project objectives were to:
 - assess subgroup performance by available demographic variables;
 - perform error analysis to understand misclassified cases;
 - interpret model behaviour using permutation importance and optional SHAP.
+
+**Top SHAP-ranked features:**
+
+| feature | mean_abs_shap |
+| --- | --- |
+| categorical__diag_1_V58 | 0.6304307 |
+| categorical__medical_specialty_Otolaryngology | 0.33250606 |
+| categorical__diag_1_V55 | 0.3040292 |
+| categorical__diag_3_250.6 | 0.29175624 |
+| categorical__diag_1_443 | 0.25912365 |
+| categorical__medical_specialty_Pediatrics-Endocrinology | 0.2570551 |
+| numeric__number_inpatient | 0.24630302 |
+| categorical__diag_1_250.41 | 0.21866883 |
+| categorical__diag_2_272 | 0.20976852 |
+| categorical__diag_1_386 | 0.19038418 |
+
 
 ## 3. Dataset
 
@@ -266,7 +283,7 @@ This project built and stress-tested an interpretable machine-learning pipeline 
 The findings show that routinely collected hospital data contains some predictive signal, but the model is not suitable for clinical deployment without further validation. The main value of the project is as a rigorous, reproducible demonstration of responsible healthcare machine learning.
 
 
-## 17. Repository Structure
+## 16. Repository Structure
 
 | File or folder | Description |
 |---|---|
@@ -284,7 +301,7 @@ The findings show that routinely collected hospital data contains some predictiv
 | `docs/technical_summary.md` | Technical summary |
 | `docs/medical_affairs_translation_brief.md` | Medical affairs brief |
 
-## 18. Reproducibility
+## 17. Reproducibility
 ### Data access
 
 This project uses the Diabetes 130-US Hospitals for Years 1999-2008 dataset from the UCI Machine Learning Repository.
@@ -346,3 +363,11 @@ Wolff, R.F., Moons, K.G.M., Riley, R.D., Whiting, P.F., Westwood, M., Collins, G
 ## Licence
 
 This repository is licensed under the MIT License. The licence applies only to the code and project documentation created in this repository. The original dataset is not redistributed here.
+
+## How to cite
+
+This repository is an independent educational health-data science project by Taranjeet Bharaj. The analysis uses the Diabetes 130-US hospitals for years 1999-2008 dataset from the UCI Machine Learning Repository.
+
+Suggested citation:
+
+Bharaj, T. Diabetes Readmission Risk Prediction Using Interpretable Machine Learning. GitHub repository, 2026. Dataset: Diabetes 130-US hospitals for years 1999-2008, UCI Machine Learning Repository.

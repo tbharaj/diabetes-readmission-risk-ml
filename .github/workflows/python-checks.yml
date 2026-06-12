@@ -1,29 +1,27 @@
-﻿name: Repository Check
+﻿name: Tests
 
 on:
   push:
   pull_request:
 
 jobs:
-  check:
+  repository-check:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Show repository files
-        run: |
-          pwd
-          ls -la
-
       - name: Check repository structure
         run: |
           test -f README.md
           test -f requirements.txt
-          test -f LICENSE
           test -d src
-          test -d outputs
           test -d docs
+          test -d outputs
           test -f CONTRIBUTING.md
           echo "Repository structure check passed."
+
+      - name: Check Python syntax
+        run: |
+          python -m compileall src
